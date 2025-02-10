@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>TradingView Widget Example with Save/Load</title>
+  <!-- بارگذاری فایل‌های Charting Library و Datafeed -->
+  <script src="charting_library/charting_library.min.js"></script>
+  <script src="datafeeds/udf/dist/bundle.js"></script>
+  <style>
+    /* حذف فاصله‌های پیش‌فرض و تنظیم اندازه صفحه */
+    html, body {
+      margin: 0;
+      padding: 0;
+      height: 100%;
+    }
+    /* تنظیم اندازه کانتینر چارت */
+    #chartContainer {
+      width: 100%;
+      height: 100%;
+    }
+  </style>
+</head>
+<body>
+  <!-- عنصر نمایش چارت -->
+  <div id="chartContainer"></div>
+  <script>
+    // ایجاد datafeed از دمو
+    const datafeed = new Datafeeds.UDFCompatibleDatafeed("https://demo-feed-data.tradingview.com");
+
+    // ایجاد TradingView widget با تنظیمات لازم
+    new TradingView.widget({
+      container: "chartContainer",               // عنصری که چارت در آن قرار می‌گیرد
+      locale: "en",                              // زبان
+      library_path: "charting_library/",          // مسیر پوشه Charting Library
+      datafeed: datafeed,                        // داده‌های فید
+      symbol: "AAPL",                            // نماد اولیه (Apple Inc.)
+      interval: "1D",                            // بازه زمانی چارت (یک روز)
+      charts_storage_url: "https://saveload.tradingview.com",  // URL ذخیره‌سازی آنلاین
+      // سایر تنظیمات اختیاری نیز می‌توانند اضافه شوند
+    });
+  </script>
+</body>
+</html>
