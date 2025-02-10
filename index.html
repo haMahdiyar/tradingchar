@@ -1,43 +1,82 @@
-<!DOCTYPE html>
+<!DOCTYPE HTML>
 <html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <title>TradingView Widget Example with Save/Load</title>
-  <!-- بارگذاری فایل‌های Charting Library و Datafeed -->
-  <script src="charting_library/charting_library.min.js"></script>
-  <script src="datafeeds/udf/dist/bundle.js"></script>
-  <style>
-    /* حذف فاصله‌های پیش‌فرض و تنظیم اندازه صفحه */
-    html, body {
-      margin: 0;
-      padding: 0;
-      height: 100%;
-    }
-    /* تنظیم اندازه کانتینر چارت */
-    #chartContainer {
-      width: 100%;
-      height: 100%;
-    }
-  </style>
-</head>
-<body>
-  <!-- عنصر نمایش چارت -->
-  <div id="chartContainer"></div>
-  <script>
-    // ایجاد datafeed از دمو
-    const datafeed = new Datafeeds.UDFCompatibleDatafeed("https://demo-feed-data.tradingview.com");
+  <head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TradingView - Advanced Charts</title>
 
-    // ایجاد TradingView widget با تنظیمات لازم
-    new TradingView.widget({
-      container: "chartContainer",               // عنصری که چارت در آن قرار می‌گیرد
-      locale: "en",                              // زبان
-      library_path: "charting_library/",          // مسیر پوشه Charting Library
-      datafeed: datafeed,                        // داده‌های فید
-      symbol: "AAPL",                            // نماد اولیه (Apple Inc.)
-      interval: "1D",                            // بازه زمانی چارت (یک روز)
-      charts_storage_url: "https://saveload.tradingview.com",  // URL ذخیره‌سازی آنلاین
-      // سایر تنظیمات اختیاری نیز می‌توانند اضافه شوند
-    });
-  </script>
-</body>
+    <!-- لود کتابخانه چارت TradingView -->
+    <script src="charting_library/charting_library.standalone.js"></script>
+    <script src="datafeeds/udf/dist/bundle.js"></script>
+  </head>
+  <body>
+    <!-- کانتینر چارت -->
+    <div id="chartContainer" style="height:600px; width:100%;"></div>
+    <!-- دکمه‌های ذخیره و بارگذاری وضعیت چارت -->
+    <!-- <button id="saveButton">ذخیره وضعیت چارت</button> -->
+    <!-- <button id="loadButton">بارگذاری وضعیت چارت</button> -->
+
+    <script>
+      // راه‌اندازی ویجت TradingView با لیست نمادهای متعدد (سهام، ارز و ارز دیجیتال)
+      var tvWidget = new TradingView.widget({
+        container: 'chartContainer',
+        locale: 'en',
+        library_path: 'charting_library/',
+        datafeed: new Datafeeds.UDFCompatibleDatafeed("https://demo-feed-data.tradingview.com"),
+        symbol: 'AAPL',
+        interval: '1D',
+        charts_storage_url: "https://saveload.tradingview.com",
+        fullscreen: true,
+        debug: true,
+        // لیست نمونه از نمادها. برای نمایش همه، باید از یک datafeed جامع استفاده کنید.
+        symbols: [
+          ['AAPL', 'Apple Inc.'],
+          ['MSFT', 'Microsoft Corporation'],
+          ['EURUSD', 'EUR/USD'],
+          ['GBPUSD', 'GBP/USD'],
+          ['USDJPY', 'USD/JPY'],
+          ['BTCUSD', 'Bitcoin / USD'],
+          ['ETHUSD', 'Ethereum / USD'],
+          ['XRPUSD', 'Ripple / USD']
+          // در صورت نیاز نمادهای بیشتر اضافه کنید.
+        ]
+      });
+
+      // پس از لود شدن چارت
+      tvWidget.onChartReady(function() {
+        console.log("چارت بارگذاری شد.");
+        // دکمه ذخیره وضعیت: فرض می‌کنیم ویجت متدی برای دریافت وضعیت چارت دارد.
+        document.getElementById('saveButton').addEventListener('click', function() {
+          // دریافت وضعیت چارت (این متد ممکن است در نسخه‌های واقعی متفاوت باشد)
+          var chartState = tvWidget.activeChart && tvWidget.activeChart().getChartState
+                          ? tvWidget.activeChart().getChartState()
+                          : {};
+          // ارسال وضعیت چارت به سرور جهت ذخیره در فایل محلی
+          fetch('/saveState', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ state: chartState })
+          })
+          .then(response => response.json())
+          .then(data => { console.log('وضعیت چارت ذخیره شد:', data); })
+          .catch(error => console.error('خطا در ذخیره وضعیت:', error));
+        });
+        // دکمه بارگذاری وضعیت: دریافت وضعیت ذخیره شده از سرور و اعمال آن روی چارت
+        document.getElementById('loadButton').addEventListener('click', function() {
+          fetch('/loadState')
+          .then(response => response.json())
+          .then(data => {
+            if (data.state && tvWidget.activeChart && tvWidget.activeChart().applyChartState) {
+              tvWidget.activeChart().applyChartState(data.state);
+              console.log('وضعیت چارت بازیابی شد.');
+            } else {
+              console.log('هیچ وضعیت ذخیره‌شده‌ای موجود نیست.');
+            }
+          })
+          .catch(error => console.error('خطا در بارگذاری وضعیت:', error));
+        });
+      });
+    </script>
+  </body>
 </html>
